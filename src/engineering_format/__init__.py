@@ -384,7 +384,7 @@ def si_parse[T](
     text: str,
     numeric_type: Callable[[Any], T] = float,
 ) -> T:
-    """Parse a string containing an SI-prefixed numeric value.
+    r"""Parse a string containing an SI-prefixed numeric value.
 
     Recognised prefixes span quecto (``q``, 10\ :sup:`-30`) through quetta
     (``Q``, 10\ :sup:`30`) including the 2022 additions.  The micro prefix is
