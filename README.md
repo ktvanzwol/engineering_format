@@ -11,6 +11,18 @@ The library is intentionally narrow in scope: it handles prefixes, not full unit
 
 ## Installation
 
+Install from PyPI with `uv`:
+
+```bash
+uv add engineering-format
+```
+
+or:
+
+```bash
+uv pip install engineering-format
+```
+
 Install from a source checkout with `uv`:
 
 ```bash
