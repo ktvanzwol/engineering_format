@@ -10,7 +10,6 @@ T = TypeVar("T")
 __all__ = [
     "si_format",
     "si_parse",
-    "si_parse_unit",
 ]
 
 # ============================================================================
@@ -202,34 +201,3 @@ def si_parse[T](
     factor = numeric_type(str(_SI_FACTORS[prefix]))
 
     return value * factor
-
-
-def si_parse_unit[T](
-    text: str,
-    numeric_type: Callable[[str], T] = float,
-) -> tuple[T, str]:
-    """
-    Parse SI-prefixed value and unit.
-
-    Examples:
-        si_parse_unit("2.5MHz")
-        -> (2500000.0, "Hz")
-
-        si_parse_unit("500mV")
-        -> (0.5, "V")
-    """
-
-    text = _normalize_micro(text.strip())
-
-    match = _SI_NUMBER_RE.match(text)
-
-    if not match:
-        raise ValueError(f"invalid SI value: {text!r}")
-
-    value = numeric_type(match.group("value"))
-    prefix = match.group("prefix")
-    unit = match.group("unit") or ""
-
-    factor = numeric_type(str(_SI_FACTORS[prefix]))
-
-    return value * factor, unit
