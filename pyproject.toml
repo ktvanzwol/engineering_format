@@ -1,13 +1,14 @@
 [project]
 name = "engineering-format"
 version = "0.1.0"
-description = "Add your description here"
+description = "SI/metric prefix formatting and parsing for Python"
 readme = "README.md"
 authors = [
     { name = "Karsten van Zwol", email = "karsten.van.zwol@gmail.com" }
 ]
 requires-python = ">=3.13"
 dependencies = []
+license = { text = "MIT" }
 
 [build-system]
 requires = ["uv_build>=0.12.2,<0.13.0"]
