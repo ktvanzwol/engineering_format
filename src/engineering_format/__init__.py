@@ -46,7 +46,23 @@ _SI_FACTORS = {prefix: 10.0**exp for exp, prefix in _SI_EXPONENTS.items()}
 _MIN_EXPONENT = min(_SI_EXPONENTS)
 _MAX_EXPONENT = max(_SI_EXPONENTS)
 
-_FLOAT_PRESENTATION_TYPES = {"e", "E", "f", "F", "g", "G", "%"}
+_FLOAT_PRESENTATION_TYPES = {"e", "E", "f", "F", "g", "G", "n", "%"}
+
+_FORMAT_SPEC_RE = re.compile(
+    r"""
+    ^
+    (?:(?P<fill>.)?(?P<align>[<>=^]))?
+    (?P<sign>[+\- ])?
+    (?P<alternate>\#)?
+    (?P<zero>0)?
+    (?P<width>\d+)?
+    (?P<grouping_option>[_,])?
+    (?P<precision>\.\d+)?
+    (?P<presentation_type>[a-zA-Z%])?
+    $
+    """,
+    re.VERBOSE,
+)
 
 # ============================================================================
 # Formatting
@@ -92,6 +108,79 @@ def _validate_format_spec(spec: str) -> None:
         )
 
 
+def _parse_format_spec(spec: str) -> dict[str, str | bool | int | None]:
+    match = _FORMAT_SPEC_RE.fullmatch(spec)
+
+    if not match:
+        raise ValueError(f"invalid format specifier: {spec!r}")
+
+    groups = match.groupdict()
+
+    return {
+        "fill": groups["fill"],
+        "align": groups["align"],
+        "sign": groups["sign"],
+        "alternate": bool(groups["alternate"]),
+        "zero": bool(groups["zero"]),
+        "width": int(groups["width"]) if groups["width"] else None,
+        "grouping_option": groups["grouping_option"],
+        "precision": groups["precision"],
+        "presentation_type": groups["presentation_type"],
+    }
+
+
+def _build_numeric_spec(parsed_spec: dict[str, str | bool | int | None]) -> str:
+    parts: list[str] = []
+
+    sign = parsed_spec["sign"]
+    alternate = parsed_spec["alternate"]
+    grouping_option = parsed_spec["grouping_option"]
+    precision = parsed_spec["precision"]
+    presentation_type = parsed_spec["presentation_type"]
+
+    if sign:
+        parts.append(str(sign))
+    if alternate:
+        parts.append("#")
+    if grouping_option:
+        parts.append(str(grouping_option))
+    if precision:
+        parts.append(str(precision))
+    if presentation_type:
+        parts.append(str(presentation_type))
+
+    return "".join(parts)
+
+
+def _apply_layout(
+    rendered: str,
+    parsed_spec: dict[str, str | bool | int | None],
+) -> str:
+    width = parsed_spec["width"]
+
+    if not width:
+        return rendered
+
+    fill = parsed_spec["fill"] or " "
+    align = parsed_spec["align"]
+
+    if align in ("<", ">", "^"):
+        return format(rendered, f"{fill}{align}{width}")
+
+    if parsed_spec["zero"]:
+        padding = width - len(rendered)
+
+        if padding <= 0:
+            return rendered
+
+        if rendered and rendered[0] in "+-":
+            return rendered[0] + ("0" * padding) + rendered[1:]
+
+        return ("0" * padding) + rendered
+
+    return format(rendered, f">{width}")
+
+
 class _SIFormatter:
     __slots__ = ("value",)
 
@@ -107,7 +196,16 @@ class _SIFormatter:
         if not spec:
             spec = "g"
 
-        return format(scaled, spec) + prefix
+        parsed_spec = _parse_format_spec(spec)
+
+        # Keep explicit '=' behavior numeric-first to preserve existing expectations.
+        if parsed_spec["align"] == "=":
+            return format(scaled, spec) + prefix
+
+        numeric_spec = _build_numeric_spec(parsed_spec)
+        rendered = format(scaled, numeric_spec) + prefix
+
+        return _apply_layout(rendered, parsed_spec)
 
     def __str__(self) -> str:
         return format(self, "")
