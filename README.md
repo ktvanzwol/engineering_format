@@ -153,7 +153,7 @@ Output:
 
 Changes should come with tests when they affect formatting or parsing behavior.
 
-CI runs on Python 3.12, 3.13, and 3.14 for every push and pull request, and enforces both Ruff and pytest.
+CI runs on Python 3.12, 3.13, and 3.14 for every pull request and for pushes to main/master, and enforces both Ruff and pytest.
 
 Run the checks before opening a pull request:
 
