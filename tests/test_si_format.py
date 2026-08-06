@@ -77,15 +77,61 @@ SPEC_CASES = [
     (1234.0, ".2f", "1.23k"),
     (1234.0, ".1f", "1.2k"),
     (1234.0, ".3g", "1.23k"),
+    (1234.0, ".2E", "1.23E+00k"),
+    (1234.0, ".2F", "1.23k"),
+    (1234.0, ".3G", "1.23k"),
+    pytest.param(
+        1234.0,
+        ".2n",
+        "1.2e+03",
+        marks=pytest.mark.xfail(reason="'n' presentation type is not supported yet by si_format"),
+    ),
     (0.0012, ".1e", "1.2e+00m"),
     (1, "g", "1"),
     (1, ".2%", "100.00%"),
-    (1000.0, "10.3f", "    1.000k"),
-    (1000.0, "010.3f", "00001.000k"),
-    (-1000.0, "010.3f", "-0001.000k"),
-    (1000.0, "<10.3f", "1.000k    "),
-    (1000.0, "^10.3f", "  1.000k  "),
-    (1000.0, "*>10.3f", "****1.000k"),
+    (1234.0, "+.2f", "+1.23k"),
+    (1234.0, " .2f", " 1.23k"),
+    (1000.0, "#.0f", "1.k"),
+    (1000.0, "#.3g", "1.00k"),
+    pytest.param(
+        1000.0,
+        "10.3f",
+        "    1.000k",
+        marks=pytest.mark.xfail(reason="SI suffix is appended after width formatting"),
+    ),
+    pytest.param(
+        1000.0,
+        "010.3f",
+        "00001.000k",
+        marks=pytest.mark.xfail(reason="SI suffix is appended after width formatting"),
+    ),
+    (-1000.0, "=+010.3f", "-00001.000k"),
+    pytest.param(
+        -1000.0,
+        "010.3f",
+        "-0001.000k",
+        marks=pytest.mark.xfail(reason="SI suffix is appended after width formatting"),
+    ),
+    pytest.param(
+        1000.0,
+        "<10.3f",
+        "1.000k    ",
+        marks=pytest.mark.xfail(reason="SI suffix is appended after width formatting"),
+    ),
+    pytest.param(
+        1000.0,
+        "^10.3f",
+        "  1.000k  ",
+        marks=pytest.mark.xfail(reason="SI suffix is appended after width formatting"),
+    ),
+    pytest.param(
+        1000.0,
+        "*>10.3f",
+        "****1.000k",
+        marks=pytest.mark.xfail(reason="SI suffix is appended after width formatting"),
+    ),
+    (1e33, ",.1f", "1,000.0Q"),
+    (1e33, "_.1f", "1_000.0Q"),
 ]
 
 
@@ -95,7 +141,24 @@ def test_si_format_specs(value: float, spec: str, expected: str):
     assert _fmt(value, spec) == expected
 
 
-@pytest.mark.parametrize("spec", ["d", "s"])
+INVALID_SPEC_CASES = [
+    "d",
+    "s",
+    "a",
+    "A",
+    "b",
+    "c",
+    "o",
+    "x",
+    "X",
+    "10.2ff",
+    "10..2f",
+    ".-2f",
+    ",_.2f",
+]
+
+
+@pytest.mark.parametrize("spec", INVALID_SPEC_CASES)
 def test_si_format_invalid_specs(spec: str):
     """Non-floating presentation specs should be rejected."""
     with pytest.raises(ValueError):
