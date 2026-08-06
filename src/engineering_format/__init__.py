@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import re
 from collections.abc import Callable
+from decimal import Decimal
 from typing import Any, TypeVar
 
 T = TypeVar("T")
@@ -42,6 +43,8 @@ _SI_EXPONENTS = {
 }
 
 _SI_FACTORS = {prefix: 10.0**exp for exp, prefix in _SI_EXPONENTS.items()}
+# Accept plain ASCII "u" as an alias for the micro sign.
+_SI_FACTORS["u"] = _SI_FACTORS["µ"]
 
 _MIN_EXPONENT = min(_SI_EXPONENTS)
 _MAX_EXPONENT = max(_SI_EXPONENTS)
@@ -237,21 +240,23 @@ _PREFIX_CHARS = "".join(
         reverse=True,
     )
     if prefix
-).replace("µ", "u")
+)
+
+_SI_VALUE_PATTERN = r"""
+    [+-]?
+    (?:
+        \d(?:_?\d)*(?:\.(?:\d(?:_?\d)*)?)?
+        |
+        \.\d(?:_?\d)*
+    )
+    (?:[eE][+-]?\d(?:_?\d)*)?
+"""
 
 _SI_NUMBER_RE = re.compile(
     rf"""
     ^
     \s*
-    (?P<value>
-        [+-]?
-        (?:
-            \d+(?:\.\d*)?
-            |
-            \.\d+
-        )
-        (?:[eE][+-]?\d+)?
-    )
+    (?P<value>{_SI_VALUE_PATTERN})
     \s*
     (?P<prefix>[{_PREFIX_CHARS}]?)
     \s*
@@ -262,16 +267,29 @@ _SI_NUMBER_RE = re.compile(
     re.VERBOSE,
 )
 
+_SI_NUMBER_WITH_TRAILING_RE = re.compile(
+    rf"""
+    ^
+    \s*
+    (?P<value>{_SI_VALUE_PATTERN})
+    \s*
+    (?P<prefix>[{_PREFIX_CHARS}])
+    \s*
+    (?P<trailing>\S.*)
+    \s*
+    $
+    """,
+    re.VERBOSE,
+)
+
 
 def _normalize_micro(text: str) -> str:
-    return (
-        text.replace("µ", "u").replace("μ", "u")  # U+00B5  # U+03BC
-    )
+    return text.replace("μ", "µ")  # U+03BC
 
 
 def si_parse[T](
     text: str,
-    numeric_type: Callable[[str], T] = float,
+    numeric_type: Callable[[Any], T] = float,
 ) -> T:
     """
     Parse an SI-prefixed value.
@@ -291,11 +309,19 @@ def si_parse[T](
     match = _SI_NUMBER_RE.match(text)
 
     if not match:
+        match = _SI_NUMBER_WITH_TRAILING_RE.match(text)
+
+    if not match:
         raise ValueError(f"invalid SI value: {text!r}")
 
-    value = numeric_type(match.group("value"))
+    value_text = match.group("value").replace("_", "")
     prefix = match.group("prefix")
 
-    factor = numeric_type(str(_SI_FACTORS[prefix]))
+    if numeric_type is Decimal:
+        value = Decimal(value_text)
+        factor = Decimal(str(_SI_FACTORS[prefix]))
+        return numeric_type(value * factor)
 
-    return value * factor
+    scaled = float(value_text) * _SI_FACTORS[prefix]
+
+    return numeric_type(scaled)
