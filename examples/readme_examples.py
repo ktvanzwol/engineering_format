@@ -22,6 +22,7 @@ def formatting_width_alignment() -> None:
     print(f"|{si_format(1000):10.3f}|")
     print(f"|{si_format(1000):<10.3f}|")
     print(f"|{si_format(1000):^10.3f}|")
+    print(f"|{si_format(1, no_prefix_symbol=' '):10.3f}|")
     print(f"|{si_format(-1000):=+010.3f}|")
     print()
 

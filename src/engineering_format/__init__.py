@@ -218,10 +218,11 @@ class _SIFormatter:
     '1.50k'
     """
 
-    __slots__ = ("value",)
+    __slots__ = ("no_prefix_symbol", "value")
 
-    def __init__(self, value: Any):
+    def __init__(self, value: Any, no_prefix_symbol: str = ""):
         self.value = value
+        self.no_prefix_symbol = no_prefix_symbol
 
     def __format__(self, spec: str) -> str:
         """Format the value with an SI prefix using a standard Python float format spec.
@@ -264,10 +265,10 @@ class _SIFormatter:
 
         # Keep explicit '=' behavior numeric-first to preserve existing expectations.
         if parsed_spec["align"] == "=":
-            return format(scaled, spec) + prefix
+            return format(scaled, spec) + (prefix or self.no_prefix_symbol)
 
         numeric_spec = _build_numeric_spec(parsed_spec)
-        rendered = format(scaled, numeric_spec) + prefix
+        rendered = format(scaled, numeric_spec) + (prefix or self.no_prefix_symbol)
 
         return _apply_layout(rendered, parsed_spec)
 
@@ -280,7 +281,7 @@ class _SIFormatter:
         return f"si_format({self.value!r})"
 
 
-def si_format(value: Any) -> _SIFormatter:
+def si_format(value: Any, *, no_prefix_symbol: str = "") -> _SIFormatter:
     """Wrap *value* for SI-prefixed formatting via f-strings or :func:`format`.
 
     Returns a :class:`_SIFormatter` whose ``__format__`` method selects the
@@ -288,6 +289,9 @@ def si_format(value: Any) -> _SIFormatter:
     to the formatted number.  All standard float format-spec options —
     precision, width, fill, alignment, sign, grouping — are honoured; the
     prefix is included within the specified *width*.
+
+    *no_prefix_symbol* is appended when the value has no SI prefix. Use a
+    space to reserve the prefix column when aligning formatted values.
 
     Units are intentionally not supported.  Append them outside the format
     expression::
@@ -298,6 +302,7 @@ def si_format(value: Any) -> _SIFormatter:
     Args:
         value: Any value accepted by :func:`float`, including :class:`int`,
             :class:`float`, and :class:`~decimal.Decimal`.
+        no_prefix_symbol: Text appended when the value has no SI prefix.
 
     Returns:
         A :class:`_SIFormatter` object.  Use it with :func:`format` or inside
@@ -317,8 +322,10 @@ def si_format(value: Any) -> _SIFormatter:
         '1.00µ'
         >>> format(si_format(1000), '+.2f')
         '+1.00k'
+        >>> format(si_format(1, no_prefix_symbol=' '), '10.3f')
+        '    1.000 '
     """
-    return _SIFormatter(value)
+    return _SIFormatter(value, no_prefix_symbol)
 
 
 # ============================================================================

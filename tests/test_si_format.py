@@ -106,6 +106,54 @@ def test_si_format_specs(value: float, spec: str, expected: str):
     assert _fmt(value, spec) == expected
 
 
+def test_si_format_no_prefix_symbol_reserves_width_column():
+    prefixed = format(si_format(1000), "10.3f")
+    unprefixed = format(si_format(1, no_prefix_symbol=" "), "10.3f")
+
+    assert prefixed == "    1.000k"
+    assert unprefixed == "    1.000 "
+    assert prefixed.index("1") == unprefixed.index("1")
+
+
+def test_si_format_no_prefix_symbol_with_equal_alignment():
+    assert format(si_format(1, no_prefix_symbol=" "), "=+010.3f") == "+00001.000 "
+
+
+def test_si_format_no_prefix_symbol_without_width():
+    assert format(si_format(1, no_prefix_symbol=" "), ".3f") == "1.000 "
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (0.0, "0.000 "),
+        (1.0, "1.000 "),
+        (-999.0, "-999.000 "),
+        (float("nan"), "nan "),
+        (float("inf"), "inf "),
+        (float("-inf"), "-inf "),
+    ],
+)
+def test_si_format_no_prefix_symbol_for_empty_prefix_values(value: float, expected: str):
+    assert format(si_format(value, no_prefix_symbol=" "), ".3f") == expected
+
+
+@pytest.mark.parametrize(
+    "spec, expected",
+    [
+        ("<10.3f", "1.000     "),
+        ("^10.3f", "  1.000   "),
+        ("*>10.3f", "****1.000 "),
+    ],
+)
+def test_si_format_no_prefix_symbol_with_alignment(spec: str, expected: str):
+    assert format(si_format(1, no_prefix_symbol=" "), spec) == expected
+
+
+def test_si_format_no_prefix_symbol_is_ignored_for_prefixed_values():
+    assert format(si_format(1000, no_prefix_symbol=" "), "10.3f") == "    1.000k"
+
+
 @pytest.mark.parametrize(
     "value, spec, scaled, prefix",
     [
