@@ -1,5 +1,12 @@
 name: Release
 
+# Release workflow for GitHub Actions
+# Triggered on git tags matching "v*"
+# uv version x.y.z          # or edit pyproject.toml
+# git commit -am "Release vx.y.z"
+# git tag vx.y.z
+# git push origin main --tags
+
 on:
   push:
     tags: ["v*"]
