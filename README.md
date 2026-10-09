@@ -67,6 +67,10 @@ Output:
 
 Formatting follows Python’s standard float-style format mini-language. Supported presentation types are the float-oriented ones: empty, `e`, `E`, `f`, `F`, `g`, `G`, `n`, and `%`.
 
+For values without an SI prefix, pass `no_prefix_symbol` to provide a suffix
+symbol. A space reserves the suffix column when aligning prefixed and
+unprefixed values:
+
 Examples:
 
 ```python
@@ -75,6 +79,7 @@ from engineering_format import si_format
 print(f"|{si_format(1000):10.3f}|")
 print(f"|{si_format(1000):<10.3f}|")
 print(f"|{si_format(1000):^10.3f}|")
+print(f"|{si_format(1, no_prefix_symbol=' '):10.3f}|")
 print(f"|{si_format(-1000):=+010.3f}|")
 ```
 
@@ -84,6 +89,7 @@ Output:
 |    1.000k|
 |1.000k    |
 |  1.000k  |
+|    1.000 |
 |-00001.000k|
 ```
 
