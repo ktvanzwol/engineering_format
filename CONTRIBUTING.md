@@ -51,7 +51,7 @@ Releases are created by pushing a version tag. After the release changes are mer
 
    ```bash
    git tag vX.Y.Z
-   git push origin main --tags
+   git push origin main vX.Y.Z
    ```
 
 The `v*` tag triggers the release workflow. It verifies that the tag matches
