@@ -35,23 +35,27 @@ Releases are created by pushing a version tag. After the release changes are mer
 
 1. Choose the next version and update the project version:
 
-	```bash
-	uv version X.Y.Z
-	uv lock
-	```
+   ```bash
+   uv version X.Y.Z
+   uv lock
+   ```
 
 2. Run the checks listed above, then commit the version and lockfile changes:
 
-	```bash
-	git add pyproject.toml uv.lock
-	git commit -m "Release vX.Y.Z"
-	```
+   ```bash
+   git add pyproject.toml uv.lock
+   git commit -m "Release vX.Y.Z"
+   ```
 
 3. Tag that commit and push the branch and tag:
 
-	```bash
-	git tag vX.Y.Z
-	git push origin main --tags
-	```
+   ```bash
+   git tag vX.Y.Z
+   git push origin main --tags
+   ```
 
-The `v*` tag triggers the release workflow. It verifies that the tag matches the project version, runs lint and tests, builds the distributions, publishes them to PyPI, and creates a GitHub release with generated notes and the distribution files. Check the workflow run to confirm the release completed successfully.
+The `v*` tag triggers the release workflow. It verifies that the tag matches
+the project version, runs lint and tests, builds the distributions, publishes
+them to PyPI, and creates a GitHub release with generated notes and the
+distribution files. Check the workflow run to confirm the release completed
+successfully.
